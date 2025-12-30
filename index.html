@@ -1,0 +1,1685 @@
+<!doctype html>
+<html lang="pt-BR" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Blackjack 21 Admin</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    
+    * {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    
+    input, textarea {
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    
+    @keyframes cardDeal {
+      from { 
+        transform: translateY(-100px) rotateZ(-15deg) scale(0.8); 
+        opacity: 0; 
+      }
+      to { 
+        transform: translateY(0) rotateZ(0deg) scale(1); 
+        opacity: 1; 
+      }
+    }
+    
+    @keyframes chipBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
+    @keyframes slideIn {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(234, 179, 8, 0.3); }
+      50% { box-shadow: 0 0 40px rgba(234, 179, 8, 0.6); }
+    }
+    
+    .card {
+      width: 50px;
+      height: 70px;
+      border-radius: 6px;
+      border: 2px solid #d1d5db;
+      background: white;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+      position: relative;
+      margin: 0 2px;
+    }
+    
+    @media (min-width: 640px) {
+      .card {
+        width: 60px;
+        height: 85px;
+        margin: 0 3px;
+      }
+    }
+    
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      right: 6px;
+      bottom: 6px;
+      border: 1px solid #f3f4f6;
+      border-radius: 4px;
+    }
+    
+    .card-deal {
+      animation: cardDeal 0.4s ease;
+    }
+    
+    .card-back {
+      background: linear-gradient(135deg, #991b1b 0%, #dc2626 50%, #991b1b 100%);
+      border-color: #7f1d1d;
+    }
+    
+    .card-back::before {
+      border-color: #fca5a5;
+    }
+    
+    .card-red {
+      color: #dc2626;
+    }
+    
+    .card-black {
+      color: #1f2937;
+    }
+    
+    .chip {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 4px dashed white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+      position: relative;
+      font-weight: 900;
+    }
+    
+    @media (min-width: 640px) {
+      .chip {
+        width: 70px;
+        height: 70px;
+        border-width: 5px;
+      }
+    }
+    
+    .chip::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.5);
+    }
+    
+    @media (min-width: 640px) {
+      .chip::after {
+        width: 50px;
+        height: 50px;
+        border-width: 3px;
+      }
+    }
+    
+    .chip:active {
+      transform: scale(0.95);
+      animation: chipBounce 0.3s ease;
+    }
+    
+    .pulse-animation {
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    .stat-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .slide-in {
+      animation: slideIn 0.5s ease;
+    }
+    
+    .betting-box {
+      width: 100%;
+      max-width: 180px;
+      height: 160px;
+      border: 3px solid #fbbf24;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(22, 101, 52, 0.8) 0%, rgba(21, 128, 61, 0.8) 100%);
+      box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.4);
+      position: relative;
+    }
+    
+    @media (min-width: 640px) {
+      .betting-box {
+        max-width: 200px;
+        height: 200px;
+        border-width: 4px;
+        border-radius: 20px;
+      }
+    }
+    
+    .betting-box.active {
+      animation: glow 2s ease-in-out infinite;
+      border-color: #fde047;
+    }
+    
+    .player-nameplate {
+      background: linear-gradient(135deg, #7c2d12 0%, #92400e 100%);
+      border: 2px solid #fbbf24;
+      border-radius: 30px;
+      padding: 6px 16px;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+    }
+    
+    @media (min-width: 640px) {
+      .player-nameplate {
+        border-width: 3px;
+        border-radius: 50px;
+        padding: 8px 24px;
+      }
+    }
+    
+    .dealer-area {
+      background: linear-gradient(180deg, rgba(20, 83, 45, 0.4) 0%, transparent 100%);
+      border-bottom: 2px solid rgba(251, 191, 36, 0.3);
+    }
+    
+    @media (min-width: 640px) {
+      .dealer-area {
+        border-bottom-width: 3px;
+      }
+    }
+    
+    .table-felt {
+      background: 
+        radial-gradient(ellipse at center, rgba(22, 163, 74, 0.2) 0%, transparent 70%),
+        linear-gradient(135deg, #166534 0%, #15803d 50%, #166534 100%);
+      position: relative;
+    }
+    
+    .table-felt::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        repeating-linear-gradient(
+          90deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 0, 0, 0.03) 2px,
+          rgba(0, 0, 0, 0.03) 4px
+        ),
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 0, 0, 0.03) 2px,
+          rgba(0, 0, 0, 0.03) 4px
+        );
+      pointer-events: none;
+    }
+    
+    .spy-button {
+      background: transparent;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: inherit;
+    }
+    
+    .spy-button:hover {
+      transform: scale(1.15);
+      filter: drop-shadow(0 0 8px rgba(234, 179, 8, 0.5));
+    }
+    
+    .modal-overlay {
+      backdrop-filter: blur(8px);
+    }
+    
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .loading-spinner {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top: 3px solid white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="h-full m-0 p-0">
+  <div id="app" class="w-full h-full overflow-auto bg-gradient-to-br from-green-800 via-green-700 to-green-900"><!-- Login Screen -->
+   <div id="authScreen" class="w-full min-h-full flex items-center justify-center p-4">
+    <div class="bg-white/95 backdrop-blur rounded-2xl shadow-2xl p-6 max-w-md w-full slide-in">
+     <div class="text-center mb-4">
+      <div class="text-6xl mb-3 flex items-center justify-center gap-2"><span>♠️</span> <span>♥️</span> <button onclick="openAdminLogin()" class="spy-button text-5xl">🃏</button> <span>♦️</span> <span>♣️</span>
+      </div>
+      <h1 id="authTitle" class="text-3xl font-bold text-gray-800 mb-2">Blackjack 21</h1>
+      <p id="welcomeText" class="text-gray-600 text-sm">Bem-vindo ao Cassino!</p>
+     </div><!-- Player Login Form -->
+     <div id="loginForm">
+      <h2 class="text-xl font-bold text-gray-800 mb-3">Login de Jogador</h2>
+      <div class="mb-3"><label for="loginUsername" class="block text-sm font-medium text-gray-700 mb-1">Usuário:</label> <input type="text" id="loginUsername" placeholder="Digite seu usuário" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-base">
+      </div>
+      <div class="mb-4"><label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-1">Senha:</label> <input type="password" id="loginPassword" placeholder="Digite sua senha" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-base">
+      </div><button id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3 px-6 rounded-lg transition-all shadow-lg mb-2 text-base"> 🎮 Entrar </button> <button onclick="openPlayerRegister()" class="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-3 px-6 rounded-lg transition-all shadow-lg mb-3 text-base"> ✨ Criar Conta </button>
+      <p class="text-center text-gray-600 text-xs">💡 Crie sua conta gratuitamente!</p>
+     </div>
+     <div id="authMessage" class="mt-3 text-center hidden">
+      <p class="text-sm font-medium"></p>
+     </div>
+    </div>
+   </div><!-- Admin Login Modal -->
+   <div id="adminLoginModal" class="hidden fixed inset-0 bg-black/90 modal-overlay flex items-center justify-center z-50 p-4">
+    <div class="bg-gradient-to-br from-purple-900 to-black rounded-2xl shadow-2xl p-6 max-w-md w-full border-3 border-purple-500 slide-in">
+     <div class="text-center mb-4">
+      <div class="text-5xl mb-3">
+       👑
+      </div>
+      <h2 class="text-2xl font-bold text-purple-300 mb-1">Acesso Admin</h2>
+      <p class="text-purple-400 text-sm">Gerenciar Contas de Jogadores</p>
+     </div>
+     <div class="mb-3"><label for="adminUsername" class="block text-sm font-medium text-purple-300 mb-1">Usuário Admin:</label> <input type="text" id="adminUsername" placeholder="administrador" class="w-full px-3 py-2 border-2 border-purple-500 rounded-lg focus:outline-none focus:border-purple-300 text-base bg-black/50 text-white">
+     </div>
+     <div class="mb-4"><label for="adminPassword" class="block text-sm font-medium text-purple-300 mb-1">Senha Admin:</label> <input type="password" id="adminPassword" placeholder="••••••" class="w-full px-3 py-2 border-2 border-purple-500 rounded-lg focus:outline-none focus:border-purple-300 text-base bg-black/50 text-white">
+     </div>
+     <div class="flex flex-col gap-2"><button onclick="adminLogin()" class="w-full bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-bold py-3 px-6 rounded-lg transition-all shadow-lg text-base"> 👑 Acessar Painel </button> <button onclick="closeAdminLogin()" class="w-full bg-gray-700 hover:bg-gray-800 active:bg-gray-900 text-white font-bold py-3 px-6 rounded-lg transition-all shadow-lg text-base"> ✕ Fechar </button>
+     </div>
+     <div id="adminMessage" class="mt-3 text-center hidden">
+      <p class="text-sm font-medium"></p>
+     </div>
+    </div>
+   </div><!-- Player Registration Modal -->
+   <div id="playerRegisterModal" class="hidden fixed inset-0 bg-black/90 modal-overlay flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full slide-in">
+     <div class="text-center mb-4">
+      <div class="text-5xl mb-3">
+       ✨
+      </div>
+      <h2 class="text-2xl font-bold text-gray-800 mb-1">Criar Conta</h2>
+      <p class="text-gray-600 text-sm">Junte-se ao Cassino Blackjack 21!</p>
+     </div>
+     <div class="mb-3"><label for="regUsername" class="block text-sm font-medium text-gray-700 mb-1">Usuário:</label> <input type="text" id="regUsername" placeholder="Digite seu usuário" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500 text-base">
+     </div>
+     <div class="mb-3"><label for="regPassword" class="block text-sm font-medium text-gray-700 mb-1">Senha:</label> <input type="password" id="regPassword" placeholder="Digite sua senha" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500 text-base">
+     </div>
+     <div class="mb-3"><label for="regEmail" class="block text-sm font-medium text-gray-700 mb-1">E-mail (opcional):</label> <input type="email" id="regEmail" placeholder="seu@email.com" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500 text-base">
+     </div>
+     <div class="mb-4"><label for="regWhatsapp" class="block text-sm font-medium text-gray-700 mb-1">WhatsApp (opcional):</label> <input type="tel" id="regWhatsapp" placeholder="(00) 00000-0000" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500 text-base">
+     </div>
+     <div class="flex flex-col gap-2"><button id="registerBtn" onclick="playerRegister()" class="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-3 px-6 rounded-lg transition-all shadow-lg text-base"> ✨ Criar Conta </button> <button onclick="closePlayerRegister()" class="w-full bg-gray-600 hover:bg-gray-700 active:bg-gray-800 text-white font-bold py-3 px-6 rounded-lg transition-all shadow-lg text-base"> ✕ Cancelar </button>
+     </div>
+     <div id="registerMessage" class="mt-3 text-center hidden">
+      <p class="text-sm font-medium"></p>
+     </div>
+    </div>
+   </div><!-- Admin Panel Screen -->
+   <div id="adminScreen" class="hidden w-full min-h-full p-4">
+    <div class="max-w-6xl mx-auto"><!-- Admin Header -->
+     <header class="bg-gradient-to-r from-purple-900 to-purple-800 rounded-2xl shadow-2xl p-4 mb-4">
+      <div class="flex items-center justify-between mb-3">
+       <div class="flex items-center gap-3"><span class="text-4xl">👑</span>
+        <div>
+         <h1 class="text-xl sm:text-2xl font-bold text-white">Painel Administrativo</h1>
+         <p class="text-purple-300 text-sm">Gerenciamento de Contas</p>
+        </div>
+       </div><button onclick="adminLogout()" class="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold py-2 px-4 rounded-lg transition-all shadow-lg text-sm"> 🚪 Sair </button>
+      </div>
+     </header><!-- Create Account Form -->
+     <div class="bg-white/95 backdrop-blur rounded-2xl shadow-2xl p-4 mb-4">
+      <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><span>✨</span> Criar Nova Conta de Jogador</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+       <div><label for="newUsername" class="block text-sm font-medium text-gray-700 mb-1">Usuário:</label> <input type="text" id="newUsername" placeholder="nome_jogador" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 text-base">
+       </div>
+       <div><label for="newPassword" class="block text-sm font-medium text-gray-700 mb-1">Senha:</label> <input type="text" id="newPassword" placeholder="senha123" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 text-base">
+       </div>
+       <div><label for="newEmail" class="block text-sm font-medium text-gray-700 mb-1">E-mail:</label> <input type="email" id="newEmail" placeholder="jogador@email.com" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 text-base">
+       </div>
+       <div><label for="newWhatsapp" class="block text-sm font-medium text-gray-700 mb-1">WhatsApp:</label> <input type="tel" id="newWhatsapp" placeholder="(00) 00000-0000" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 text-base">
+       </div>
+       <div><label for="newChips" class="block text-sm font-medium text-gray-700 mb-1">Fichas Iniciais:</label> <input type="number" id="newChips" value="100" min="0" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 text-base">
+       </div>
+      </div><button id="createAccountBtn" onclick="createAccount()" class="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-3 px-6 rounded-lg transition-all shadow-lg text-base flex items-center justify-center gap-2"> <span>➕ Criar Conta</span> </button>
+      <div id="createMessage" class="mt-3 text-center hidden">
+       <p class="text-sm font-medium"></p>
+      </div>
+     </div><!-- Players List -->
+     <div class="bg-white/95 backdrop-blur rounded-2xl shadow-2xl p-4">
+      <div class="flex items-center justify-between mb-4">
+       <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2"><span>👥</span> Contas de Jogadores</h2>
+       <div class="text-sm text-gray-600">
+        Total: <span id="playerCount" class="font-bold">0</span>
+       </div>
+      </div>
+      <div id="playersList" class="space-y-3 max-h-[600px] overflow-y-auto scrollbar-hide">
+       <div class="text-center py-8 text-gray-500">
+        <div class="loading-spinner mx-auto mb-2"></div>
+        <p class="text-sm">Carregando jogadores...</p>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Game Screen (Player) -->
+   <div id="gameScreen" class="hidden w-full min-h-full"><!-- Header with Profile -->
+    <header class="bg-gradient-to-r from-gray-900 to-gray-800 shadow-lg p-3 sticky top-0 z-40">
+     <div class="max-w-7xl mx-auto">
+      <div class="flex items-center justify-between mb-2">
+       <div class="flex items-center gap-2">
+        <div>
+         <h2 class="text-base sm:text-lg font-bold text-white" id="username">Jogador</h2>
+         <p class="text-xs text-gray-300">Nível: Iniciante</p>
+        </div>
+       </div>
+       <div class="text-right">
+        <p class="text-xs text-gray-300">Fichas:</p>
+        <p class="text-xl sm:text-2xl font-bold text-green-400" id="chipsDisplay">0 🪙</p>
+       </div>
+      </div>
+      <div class="text-center mb-2">
+       <h1 id="gameTitle" class="text-lg sm:text-xl font-bold text-yellow-400">♠️♥️ Blackjack 21 ♦️♣️</h1>
+      </div>
+      <div class="flex flex-wrap gap-2 justify-center"><button id="rankingBtn" onclick="toggleRanking()" class="bg-yellow-600 hover:bg-yellow-700 active:bg-yellow-800 text-white font-bold py-2 px-4 rounded-lg transition-all shadow-lg text-sm"> 🏆 Ranking </button> <button onclick="playerLogout()" class="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold py-2 px-4 rounded-lg transition-all shadow-lg text-sm"> 🚪 Sair </button>
+      </div>
+     </div>
+    </header>
+    <div class="max-w-7xl mx-auto p-2 sm:p-4"><!-- Ranking Panel -->
+     <div id="rankingPanel" class="hidden bg-white/95 backdrop-blur rounded-xl shadow-2xl p-4 mb-3">
+      <div class="flex items-center justify-between mb-3">
+       <h2 class="text-lg sm:text-xl font-bold text-yellow-600">🏆 Ranking</h2><button onclick="toggleRanking()" class="bg-gray-600 hover:bg-gray-700 active:bg-gray-800 text-white font-bold py-2 px-3 rounded-lg transition-all text-sm"> ✕ </button>
+      </div>
+      <div id="rankingList" class="space-y-2 max-h-96 overflow-y-auto scrollbar-hide">
+       <p class="text-gray-500 text-center py-4 text-sm">Carregando...</p>
+      </div>
+     </div><!-- Stats Row -->
+     <div class="grid grid-cols-4 gap-2 mb-3">
+      <div class="stat-card text-center">
+       <p class="text-lg sm:text-xl font-bold text-blue-600" id="wins">0</p>
+       <p class="text-xs text-gray-600">Vitórias</p>
+      </div>
+      <div class="stat-card text-center">
+       <p class="text-lg sm:text-xl font-bold text-red-600" id="losses">0</p>
+       <p class="text-xs text-gray-600">Derrotas</p>
+      </div>
+      <div class="stat-card text-center">
+       <p class="text-lg sm:text-xl font-bold text-yellow-600" id="pushes">0</p>
+       <p class="text-xs text-gray-600">Empates</p>
+      </div>
+      <div class="stat-card text-center">
+       <p class="text-lg sm:text-xl font-bold text-purple-600" id="totalPlayed">0</p>
+       <p class="text-xs text-gray-600">Jogos</p>
+      </div>
+     </div><!-- Casino Table -->
+     <main class="table-felt rounded-2xl shadow-2xl p-4 mb-3 min-h-[500px]"><!-- Dealer Section -->
+      <div class="dealer-area pb-4 mb-6">
+       <div class="text-center mb-3">
+        <div class="inline-block bg-black/80 backdrop-blur rounded-lg px-4 py-2 border-2 border-yellow-500">
+         <p class="text-yellow-400 text-base sm:text-lg font-bold">🎩 DEALER</p>
+        </div>
+       </div>
+       <div id="dealerHand" class="flex justify-center min-h-[90px] items-center flex-wrap">
+        <p class="text-white/70 text-sm">Aguardando apostas...</p>
+       </div>
+       <div class="flex justify-center mt-3">
+        <div class="bg-black/70 backdrop-blur rounded-full px-4 py-1 border-2 border-yellow-500">
+         <p class="text-yellow-400 text-lg sm:text-xl font-bold" id="dealerScore">-</p>
+        </div>
+       </div>
+      </div><!-- Player Area -->
+      <div class="mt-8">
+       <div class="flex justify-center mb-4">
+        <div class="text-center">
+         <div class="betting-box flex flex-col items-center justify-between p-3" id="box1">
+          <div class="text-center">
+           <p class="text-yellow-300 text-xs font-bold mb-1">SUAS CARTAS</p>
+           <div class="bg-black/50 rounded-lg px-2 py-1">
+            <p class="text-yellow-400 text-lg sm:text-xl font-bold" id="bet1Amount">0 🪙</p>
+           </div>
+          </div>
+          <div id="hand1Cards" class="flex justify-center items-center min-h-[80px] flex-wrap">
+          </div>
+          <div class="bg-black/50 rounded-full px-3 py-1">
+           <p class="text-white text-base sm:text-lg font-bold" id="score1">-</p>
+          </div>
+         </div>
+         <div class="player-nameplate mt-3">
+          <p class="text-yellow-300 text-sm sm:text-base font-bold" id="playerName1">👤 Jogador</p>
+         </div>
+        </div>
+       </div>
+      </div><!-- Message Area -->
+      <div id="messageArea" class="mt-4 text-center">
+       <div class="inline-block bg-black/80 backdrop-blur rounded-lg px-4 py-2 border-2 border-yellow-500">
+        <p id="gameMessage" class="text-base sm:text-lg font-bold text-yellow-300"></p>
+       </div>
+      </div>
+     </main><!-- Dealer Chat -->
+     <aside class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl p-4 mb-3">
+      <div class="bg-gradient-to-r from-yellow-600 to-yellow-500 rounded-lg p-3 mb-3 text-center">
+       <h3 class="text-white text-base sm:text-lg font-bold">🎩 Chat do Dealer</h3>
+      </div>
+      <div id="dealerChat" class="bg-black/40 rounded-lg p-3 max-h-48 overflow-y-auto space-y-2 scrollbar-hide">
+       <div class="bg-blue-600/20 border-l-4 border-blue-500 rounded-lg p-2">
+        <p class="text-blue-300 text-xs font-bold mb-1">💬 Dealer</p>
+        <p class="text-white text-xs">Bem-vindo! Faça suas apostas.</p>
+       </div>
+      </div>
+     </aside><!-- Betting Controls -->
+     <div id="bettingArea" class="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl shadow-2xl p-4 mb-3">
+      <div class="text-center mb-3">
+       <div class="inline-block bg-green-700 rounded-lg px-4 py-2 border-2 border-yellow-500">
+        <p class="text-white text-sm sm:text-base font-bold">🪙 Faça sua aposta</p>
+       </div>
+      </div>
+      <div class="flex justify-center gap-3 mb-4 flex-wrap"><button onclick="placeBet(1)" class="chip bg-gradient-to-br from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 flex items-center justify-center"> <span class="text-white font-bold text-lg">1</span> </button> <button onclick="placeBet(5)" class="chip bg-gradient-to-br from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 flex items-center justify-center"> <span class="text-white font-bold text-lg">5</span> </button> <button onclick="placeBet(10)" class="chip bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 flex items-center justify-center"> <span class="text-white font-bold text-lg">10</span> </button> <button onclick="placeBet(25)" class="chip bg-gradient-to-br from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 flex items-center justify-center"> <span class="text-white font-bold text-lg">25</span> </button>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2 justify-center"><button id="dealBtn" onclick="dealCards()" class="bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 text-gray-900 font-bold py-3 px-6 rounded-lg transition-all shadow-lg text-base"> 🎴 DISTRIBUIR </button> <button onclick="clearBet()" class="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold py-3 px-6 rounded-lg transition-all shadow-lg text-base"> ❌ LIMPAR </button>
+      </div>
+     </div><!-- Action Buttons -->
+     <div id="actionButtons" class="hidden bg-gray-900 rounded-2xl p-4 mb-3">
+      <div class="text-center mb-3">
+       <p class="text-yellow-400 font-bold text-base">🎴 Sua vez!</p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2 justify-center"><button onclick="hit()" class="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-3 px-6 rounded-lg transition-all shadow-lg text-base"> 👆 PEDIR </button> <button onclick="stand()" class="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold py-3 px-6 rounded-lg transition-all shadow-lg text-base"> ✋ PARAR </button> <button onclick="doubleDown()" id="doubleBtn" class="bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 text-gray-900 font-bold py-3 px-6 rounded-lg transition-all shadow-lg text-base"> 2️⃣ DOBRAR </button>
+      </div>
+     </div><!-- New Round Button -->
+     <div id="newRoundArea" class="hidden flex justify-center mb-3"><button onclick="newRound()" class="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3 px-8 rounded-lg transition-all shadow-lg text-base pulse-animation"> 🔄 NOVA RODADA </button>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      game_title: "♠���♥️ Blackjack 21 ♦️♣️",
+      welcome_text: "Bem-vindo ao Cassino!"
+    };
+    
+    const SUITS = ['♠', '♥', '♦', '♣'];
+    const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+    const NUM_DECKS = 6;
+    
+    const BLACKJACK_PAYOUT = 1.5;
+    const DEALER_STANDS_ON = 17;
+    const DEALER_HITS_SOFT_17 = true;
+    
+    const ADMIN_USERNAME = 'administrador';
+    const ADMIN_PASSWORD = '424398';
+    
+    let currentUser = null;
+    let allUsers = [];
+    let isAdmin = false;
+    
+    let shoe = [];
+    let playerHand1 = [];
+    let dealerHand = [];
+    let chips = 0;
+    let bet1 = 0;
+    let gameInProgress = false;
+    let dealerTurn = false;
+    let canDoubleDown = false;
+    
+    let wins = 0;
+    let losses = 0;
+    let pushes = 0;
+    let totalPlayed = 0;
+    
+    // Data SDK Handler
+    const dataHandler = {
+      onDataChanged(data) {
+        allUsers = data;
+        
+        if (isAdmin) {
+          renderAdminPlayersList();
+        } else if (currentUser) {
+          const updatedUser = allUsers.find(u => u.id === currentUser.id);
+          if (updatedUser) {
+            currentUser = updatedUser;
+            chips = currentUser.chips;
+            updateGameUI();
+          }
+          renderRankingList();
+        }
+      }
+    };
+    
+    // Element SDK Functions
+    async function onConfigChange(config) {
+      const gameTitleEl = document.getElementById('gameTitle');
+      const authTitleEl = document.getElementById('authTitle');
+      const welcomeTextEl = document.getElementById('welcomeText');
+      
+      if (gameTitleEl) {
+        gameTitleEl.textContent = config.game_title || defaultConfig.game_title;
+      }
+      if (authTitleEl) {
+        authTitleEl.textContent = config.game_title || defaultConfig.game_title;
+      }
+      if (welcomeTextEl) {
+        welcomeTextEl.textContent = config.welcome_text || defaultConfig.welcome_text;
+      }
+    }
+    
+    function mapToCapabilities(config) {
+      return {
+        recolorables: [],
+        borderables: [],
+        fontEditable: undefined,
+        fontSizeable: undefined
+      };
+    }
+    
+    function mapToEditPanelValues(config) {
+      return new Map([
+        ["game_title", config.game_title || defaultConfig.game_title],
+        ["welcome_text", config.welcome_text || defaultConfig.welcome_text]
+      ]);
+    }
+    
+    // Admin Login Functions
+    function openAdminLogin() {
+      document.getElementById('adminLoginModal').classList.remove('hidden');
+      document.getElementById('adminUsername').focus();
+    }
+    
+    function closeAdminLogin() {
+      document.getElementById('adminLoginModal').classList.add('hidden');
+      document.getElementById('adminUsername').value = '';
+      document.getElementById('adminPassword').value = '';
+      document.getElementById('adminMessage').classList.add('hidden');
+    }
+    
+    // Player Registration Functions
+    function openPlayerRegister() {
+      document.getElementById('playerRegisterModal').classList.remove('hidden');
+      document.getElementById('regUsername').focus();
+    }
+    
+    function closePlayerRegister() {
+      document.getElementById('playerRegisterModal').classList.add('hidden');
+      document.getElementById('regUsername').value = '';
+      document.getElementById('regPassword').value = '';
+      document.getElementById('regEmail').value = '';
+      document.getElementById('regWhatsapp').value = '';
+      document.getElementById('registerMessage').classList.add('hidden');
+    }
+    
+    async function playerRegister() {
+      const username = document.getElementById('regUsername').value.trim();
+      const password = document.getElementById('regPassword').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const whatsapp = document.getElementById('regWhatsapp').value.trim();
+      
+      if (!username || !password) {
+        showRegisterMessage('Usuário e senha são obrigatórios!', 'text-red-600');
+        return;
+      }
+      
+      if (username.length < 3) {
+        showRegisterMessage('Usuário deve ter pelo menos 3 caracteres!', 'text-red-600');
+        return;
+      }
+      
+      if (password.length < 4) {
+        showRegisterMessage('Senha deve ter pelo menos 4 caracteres!', 'text-red-600');
+        return;
+      }
+      
+      const existingUser = allUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
+      if (existingUser) {
+        showRegisterMessage('Usuário já existe! Escolha outro.', 'text-red-600');
+        return;
+      }
+      
+      const registerBtn = document.getElementById('registerBtn');
+      registerBtn.disabled = true;
+      registerBtn.innerHTML = '<div class="loading-spinner mx-auto"></div>';
+      
+      const newUser = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        username: username,
+        password: password,
+        email: email,
+        whatsapp: whatsapp,
+        is_admin: false,
+        chips: 100,
+        total_wins: 0,
+        total_losses: 0,
+        total_pushes: 0,
+        total_played: 0,
+        created_at: new Date().toISOString()
+      };
+      
+      const result = await window.dataSdk.create(newUser);
+      
+      registerBtn.disabled = false;
+      registerBtn.innerHTML = '<span>✨ Criar Conta</span>';
+      
+      if (result.isOk) {
+        showRegisterMessage('Conta criada! Faça login agora.', 'text-green-600');
+        
+        setTimeout(() => {
+          closePlayerRegister();
+          document.getElementById('loginUsername').value = username;
+        }, 2000);
+      } else {
+        showRegisterMessage('Erro ao criar conta. Tente novamente.', 'text-red-600');
+      }
+    }
+    
+    function showRegisterMessage(message, colorClass) {
+      const messageEl = document.getElementById('registerMessage');
+      messageEl.querySelector('p').textContent = message;
+      messageEl.querySelector('p').className = `text-sm font-medium ${colorClass}`;
+      messageEl.classList.remove('hidden');
+      
+      setTimeout(() => {
+        messageEl.classList.add('hidden');
+      }, 3000);
+    }
+    
+    async function adminLogin() {
+      const username = document.getElementById('adminUsername').value.trim();
+      const password = document.getElementById('adminPassword').value.trim();
+      
+      if (username.toLowerCase() !== ADMIN_USERNAME.toLowerCase()) {
+        showAdminMessage('Usuário incorreto!', 'text-red-400');
+        return;
+      }
+      
+      if (password !== ADMIN_PASSWORD) {
+        showAdminMessage('Senha incorreta!', 'text-red-400');
+        return;
+      }
+      
+      isAdmin = true;
+      closeAdminLogin();
+      loadAdminScreen();
+    }
+    
+    function showAdminMessage(message, colorClass) {
+      const messageEl = document.getElementById('adminMessage');
+      messageEl.querySelector('p').textContent = message;
+      messageEl.querySelector('p').className = `text-sm font-medium ${colorClass}`;
+      messageEl.classList.remove('hidden');
+      
+      setTimeout(() => {
+        messageEl.classList.add('hidden');
+      }, 3000);
+    }
+    
+    function loadAdminScreen() {
+      document.getElementById('authScreen').classList.add('hidden');
+      document.getElementById('adminScreen').classList.remove('hidden');
+      renderAdminPlayersList();
+    }
+    
+    function adminLogout() {
+      isAdmin = false;
+      document.getElementById('adminScreen').classList.add('hidden');
+      document.getElementById('authScreen').classList.remove('hidden');
+      
+      document.getElementById('newUsername').value = '';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('newEmail').value = '';
+      document.getElementById('newWhatsapp').value = '';
+      document.getElementById('newChips').value = '100';
+    }
+    
+    // Create Account Function
+    async function createAccount() {
+      const username = document.getElementById('newUsername').value.trim();
+      const password = document.getElementById('newPassword').value.trim();
+      const email = document.getElementById('newEmail').value.trim();
+      const whatsapp = document.getElementById('newWhatsapp').value.trim();
+      const initialChips = parseInt(document.getElementById('newChips').value) || 100;
+      
+      if (!username || !password) {
+        showCreateMessage('Usuário e senha são obrigatórios!', 'text-red-600');
+        return;
+      }
+      
+      if (username.length < 3) {
+        showCreateMessage('Usuário deve ter pelo menos 3 caracteres!', 'text-red-600');
+        return;
+      }
+      
+      const existingUser = allUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
+      if (existingUser) {
+        showCreateMessage('Usuário já existe!', 'text-red-600');
+        return;
+      }
+      
+      const createBtn = document.getElementById('createAccountBtn');
+      createBtn.disabled = true;
+      createBtn.innerHTML = '<div class="loading-spinner mx-auto"></div>';
+      
+      const newUser = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        username: username,
+        password: password,
+        email: email,
+        whatsapp: whatsapp,
+        is_admin: false,
+        chips: initialChips,
+        total_wins: 0,
+        total_losses: 0,
+        total_pushes: 0,
+        total_played: 0,
+        created_at: new Date().toISOString()
+      };
+      
+      const result = await window.dataSdk.create(newUser);
+      
+      createBtn.disabled = false;
+      createBtn.innerHTML = '<span>➕ Criar Conta</span>';
+      
+      if (result.isOk) {
+        showCreateMessage(`Conta criada com sucesso! Usuário: ${username}`, 'text-green-600');
+        
+        document.getElementById('newUsername').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('newEmail').value = '';
+        document.getElementById('newWhatsapp').value = '';
+        document.getElementById('newChips').value = '100';
+      } else {
+        showCreateMessage('Erro ao criar conta. Tente novamente.', 'text-red-600');
+      }
+    }
+    
+    function showCreateMessage(message, colorClass) {
+      const messageEl = document.getElementById('createMessage');
+      messageEl.querySelector('p').textContent = message;
+      messageEl.querySelector('p').className = `text-sm font-medium ${colorClass}`;
+      messageEl.classList.remove('hidden');
+      
+      setTimeout(() => {
+        messageEl.classList.add('hidden');
+      }, 3000);
+    }
+    
+    // Render Admin Players List
+    function renderAdminPlayersList() {
+      const container = document.getElementById('playersList');
+      const countEl = document.getElementById('playerCount');
+      
+      const players = allUsers.filter(u => !u.is_admin);
+      countEl.textContent = players.length;
+      
+      if (players.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-gray-500">
+            <span class="text-4xl mb-2 block">👥</span>
+            <p class="text-sm">Nenhum jogador cadastrado ainda</p>
+            <p class="text-xs mt-1">Crie a primeira conta acima</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = '';
+      
+      const sortedPlayers = [...players].sort((a, b) => {
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+      
+      sortedPlayers.forEach(user => {
+        const card = document.createElement('div');
+        card.className = 'bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border-2 border-gray-200 hover:border-purple-300 transition-all';
+        
+        const createdDate = new Date(user.created_at).toLocaleDateString('pt-BR');
+        
+        card.innerHTML = `
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">👤</span>
+              <div>
+                <h3 class="text-lg font-bold text-gray-800">${user.username}</h3>
+                <p class="text-xs text-gray-500">Criado em: ${createdDate}</p>
+                ${user.email ? `<p class="text-xs text-gray-600">📧 ${user.email}</p>` : ''}
+                ${user.whatsapp ? `<p class="text-xs text-gray-600">📱 ${user.whatsapp}</p>` : ''}
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-2xl font-bold text-yellow-600">${user.chips} 🪙</p>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-4 gap-2 mb-3 text-center text-xs">
+            <div class="bg-white/70 rounded p-2">
+              <p class="text-green-600 font-bold">${user.total_wins}</p>
+              <p class="text-gray-500">Vitórias</p>
+            </div>
+            <div class="bg-white/70 rounded p-2">
+              <p class="text-red-600 font-bold">${user.total_losses}</p>
+              <p class="text-gray-500">Derrotas</p>
+            </div>
+            <div class="bg-white/70 rounded p-2">
+              <p class="text-yellow-600 font-bold">${user.total_pushes}</p>
+              <p class="text-gray-500">Empates</p>
+            </div>
+            <div class="bg-white/70 rounded p-2">
+              <p class="text-purple-600 font-bold">${user.total_played}</p>
+              <p class="text-gray-500">Jogos</p>
+            </div>
+          </div>
+          
+          <div class="bg-white/70 rounded-lg p-3 mb-2">
+            <label class="block text-xs font-bold text-gray-700 mb-2">💰 Gerenciar Fichas:</label>
+            <div class="flex gap-2 mb-2">
+              <input type="number" id="chips-${user.__backendId}" placeholder="Quantidade" class="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-purple-500">
+            </div>
+            <div class="flex gap-2">
+              <button onclick="addChipsToPlayer('${user.__backendId}')" class="flex-1 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold px-3 py-2 rounded-lg text-sm transition-all">
+                ➕ Adicionar
+              </button>
+              <button onclick="removeChipsFromPlayer('${user.__backendId}')" class="flex-1 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold px-3 py-2 rounded-lg text-sm transition-all">
+                ➖ Remover
+              </button>
+              <button onclick="setChipsForPlayer('${user.__backendId}')" class="flex-1 bg-yellow-600 hover:bg-yellow-700 active:bg-yellow-800 text-white font-bold px-3 py-2 rounded-lg text-sm transition-all">
+                💰 Definir
+              </button>
+            </div>
+          </div>
+          
+          <div class="flex gap-2">
+            ${user.whatsapp ? `
+              <button onclick="openWhatsApp('${user.whatsapp}', '${user.username}')" class="flex-1 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-bold py-2 rounded-lg text-sm transition-all">
+                📱 WhatsApp
+              </button>
+            ` : ''}
+            <button onclick="deletePlayer('${user.__backendId}')" class="flex-1 bg-gray-600 hover:bg-gray-700 active:bg-gray-800 text-white font-bold py-2 rounded-lg text-sm transition-all">
+              ��️ Deletar
+            </button>
+          </div>
+        `;
+        
+        container.appendChild(card);
+      });
+    }
+    
+    // Admin Chip Management Functions
+    async function addChipsToPlayer(backendId) {
+      const user = allUsers.find(u => u.__backendId === backendId);
+      if (!user) return;
+      
+      const input = document.getElementById(`chips-${backendId}`);
+      const amount = parseInt(input.value);
+      
+      if (!amount || amount <= 0) {
+        alert('Digite um valor válido!');
+        return;
+      }
+      
+      const updatedUser = { ...user, chips: user.chips + amount };
+      const result = await window.dataSdk.update(updatedUser);
+      
+      if (result.isOk) {
+        input.value = '';
+      } else {
+        alert('Erro ao adicionar fichas!');
+      }
+    }
+    
+    async function removeChipsFromPlayer(backendId) {
+      const user = allUsers.find(u => u.__backendId === backendId);
+      if (!user) return;
+      
+      const input = document.getElementById(`chips-${backendId}`);
+      const amount = parseInt(input.value);
+      
+      if (!amount || amount <= 0) {
+        alert('Digite um valor válido!');
+        return;
+      }
+      
+      const updatedUser = { ...user, chips: Math.max(0, user.chips - amount) };
+      const result = await window.dataSdk.update(updatedUser);
+      
+      if (result.isOk) {
+        input.value = '';
+      } else {
+        alert('Erro ao remover fichas!');
+      }
+    }
+    
+    async function setChipsForPlayer(backendId) {
+      const user = allUsers.find(u => u.__backendId === backendId);
+      if (!user) return;
+      
+      const input = document.getElementById(`chips-${backendId}`);
+      const amount = parseInt(input.value);
+      
+      if (amount === undefined || amount < 0 || isNaN(amount)) {
+        alert('Digite um valor válido!');
+        return;
+      }
+      
+      const updatedUser = { ...user, chips: amount };
+      const result = await window.dataSdk.update(updatedUser);
+      
+      if (result.isOk) {
+        input.value = '';
+      } else {
+        alert('Erro ao definir fichas!');
+      }
+    }
+    
+    async function deletePlayer(backendId) {
+      const user = allUsers.find(u => u.__backendId === backendId);
+      if (!user) return;
+      
+      const confirmDiv = document.createElement('div');
+      confirmDiv.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4';
+      confirmDiv.innerHTML = `
+        <div class="bg-white rounded-xl p-6 max-w-sm">
+          <h3 class="text-lg font-bold text-gray-800 mb-2">Confirmar Exclusão</h3>
+          <p class="text-gray-600 mb-4">Deseja realmente deletar a conta de <strong>${user.username}</strong>?</p>
+          <div class="flex gap-2">
+            <button id="confirmDelete" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">
+              Deletar
+            </button>
+            <button id="cancelDelete" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(confirmDiv);
+      
+      document.getElementById('confirmDelete').onclick = async () => {
+        const result = await window.dataSdk.delete(user);
+        document.body.removeChild(confirmDiv);
+        
+        if (!result.isOk) {
+          alert('Erro ao deletar jogador!');
+        }
+      };
+      
+      document.getElementById('cancelDelete').onclick = () => {
+        document.body.removeChild(confirmDiv);
+      };
+    }
+    
+    function openWhatsApp(phone, username) {
+      const message = encodeURIComponent(`Olá ${username}! Aqui é do Cassino Blackjack 21.`);
+      window.open(`https://wa.me/${phone}?text=${message}`, '_blank', 'noopener,noreferrer');
+    }
+    
+    // Player Login Functions
+    async function playerLogin() {
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+      
+      if (!username || !password) {
+        showAuthMessage('Preencha todos os campos!', 'text-red-600');
+        return;
+      }
+      
+      const user = allUsers.find(u => 
+        u.username.toLowerCase() === username.toLowerCase() && 
+        u.password === password &&
+        !u.is_admin
+      );
+      
+      if (user) {
+        currentUser = user;
+        loadGameScreen();
+      } else {
+        showAuthMessage('Usuário ou senha incorretos!', 'text-red-600');
+      }
+    }
+    
+    function showAuthMessage(message, colorClass) {
+      const messageEl = document.getElementById('authMessage');
+      messageEl.querySelector('p').textContent = message;
+      messageEl.querySelector('p').className = `text-sm font-medium ${colorClass}`;
+      messageEl.classList.remove('hidden');
+      
+      setTimeout(() => {
+        messageEl.classList.add('hidden');
+      }, 3000);
+    }
+    
+    function loadGameScreen() {
+      chips = currentUser.chips;
+      wins = currentUser.total_wins;
+      losses = currentUser.total_losses;
+      pushes = currentUser.total_pushes;
+      totalPlayed = currentUser.total_played;
+      
+      document.getElementById('username').textContent = currentUser.username;
+      document.getElementById('playerName1').textContent = `👤 ${currentUser.username}`;
+      
+      document.getElementById('authScreen').classList.add('hidden');
+      document.getElementById('gameScreen').classList.remove('hidden');
+      
+      updateGameUI();
+      shoe = createShoe();
+      showMessage('Faça sua aposta!', 'text-blue-400');
+    }
+    
+    function playerLogout() {
+      currentUser = null;
+      resetGame();
+      
+      document.getElementById('gameScreen').classList.add('hidden');
+      document.getElementById('authScreen').classList.remove('hidden');
+      document.getElementById('loginUsername').value = '';
+      document.getElementById('loginPassword').value = '';
+    }
+    
+    async function saveUserProgress() {
+      if (!currentUser) return;
+      
+      const updatedUser = {
+        ...currentUser,
+        chips: chips,
+        total_wins: wins,
+        total_losses: losses,
+        total_pushes: pushes,
+        total_played: totalPlayed
+      };
+      
+      await window.dataSdk.update(updatedUser);
+    }
+    
+    function resetGame() {
+      playerHand1 = [];
+      dealerHand = [];
+      chips = 0;
+      bet1 = 0;
+      gameInProgress = false;
+      dealerTurn = false;
+      wins = 0;
+      losses = 0;
+      pushes = 0;
+      totalPlayed = 0;
+    }
+    
+    // Ranking Functions
+    function toggleRanking() {
+      const panel = document.getElementById('rankingPanel');
+      if (panel.classList.contains('hidden')) {
+        panel.classList.remove('hidden');
+        renderRankingList();
+      } else {
+        panel.classList.add('hidden');
+      }
+    }
+    
+    function renderRankingList() {
+      const container = document.getElementById('rankingList');
+      
+      const players = allUsers.filter(u => !u.is_admin);
+      
+      if (players.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-4 text-sm">Nenhum jogador</p>';
+        return;
+      }
+      
+      container.innerHTML = '';
+      
+      const sortedPlayers = [...players].sort((a, b) => b.chips - a.chips);
+      
+      sortedPlayers.forEach((user, index) => {
+        const card = document.createElement('div');
+        card.className = 'bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-3 border border-yellow-500/30';
+        
+        let medal = '';
+        if (index === 0) medal = '🥇';
+        else if (index === 1) medal = '🥈';
+        else if (index === 2) medal = '🥉';
+        
+        card.innerHTML = `
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">${medal || '👤'}</span>
+              <h3 class="text-white font-bold text-sm">${user.username}</h3>
+            </div>
+            <span class="text-gray-400 text-xs">#${index + 1}</span>
+          </div>
+          <div class="bg-black/40 rounded-lg p-2 text-center mb-2">
+            <p class="text-yellow-400 text-xl font-bold">${user.chips} 🪙</p>
+          </div>
+          <div class="grid grid-cols-3 gap-1 text-center text-xs">
+            <div>
+              <p class="text-green-400 font-bold">${user.total_wins}</p>
+              <p class="text-gray-400">Vitórias</p>
+            </div>
+            <div>
+              <p class="text-red-400 font-bold">${user.total_losses}</p>
+              <p class="text-gray-400">Derrotas</p>
+            </div>
+            <div>
+              <p class="text-purple-400 font-bold">${user.total_played}</p>
+              <p class="text-gray-400">Jogos</p>
+            </div>
+          </div>
+        `;
+        
+        container.appendChild(card);
+      });
+    }
+    
+    // Game Functions
+    function createShoe() {
+      const newShoe = [];
+      for (let d = 0; d < NUM_DECKS; d++) {
+        for (const suit of SUITS) {
+          for (const rank of RANKS) {
+            newShoe.push({ 
+              suit, 
+              rank,
+              color: (suit === '♥' || suit === '♦') ? 'red' : 'black'
+            });
+          }
+        }
+      }
+      return shuffleShoe(newShoe);
+    }
+    
+    function shuffleShoe(cards) {
+      const shuffled = [...cards];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+    
+    function getCardValue(card, currentTotal = 0) {
+      if (card.rank === 'A') {
+        return (currentTotal + 11 <= 21) ? 11 : 1;
+      } else if (['J', 'Q', 'K'].includes(card.rank)) {
+        return 10;
+      }
+      return parseInt(card.rank);
+    }
+    
+    function getHandValue(hand) {
+      let total = 0;
+      let aces = 0;
+      
+      for (const card of hand) {
+        if (card.rank === 'A') {
+          aces++;
+          total += 11;
+        } else if (['J', 'Q', 'K'].includes(card.rank)) {
+          total += 10;
+        } else {
+          total += parseInt(card.rank);
+        }
+      }
+      
+      while (total > 21 && aces > 0) {
+        total -= 10;
+        aces--;
+      }
+      
+      return total;
+    }
+    
+    function isSoftHand(hand) {
+      let total = 0;
+      let aces = 0;
+      
+      for (const card of hand) {
+        if (card.rank === 'A') {
+          aces++;
+          total += 11;
+        } else if (['J', 'Q', 'K'].includes(card.rank)) {
+          total += 10;
+        } else {
+          total += parseInt(card.rank);
+        }
+      }
+      
+      if (aces > 0 && total <= 21) {
+        return true;
+      }
+      
+      return false;
+    }
+    
+    function isBlackjack(hand) {
+      return hand.length === 2 && getHandValue(hand) === 21;
+    }
+    
+    function createCardElement(card, faceDown = false) {
+      const cardDiv = document.createElement('div');
+      cardDiv.className = 'card card-deal';
+      
+      if (faceDown) {
+        cardDiv.className += ' card-back';
+        cardDiv.innerHTML = '<div class="w-full h-full flex items-center justify-center text-white text-2xl sm:text-3xl">🂠</div>';
+      } else {
+        const colorClass = card.color === 'red' ? 'card-red' : 'card-black';
+        cardDiv.innerHTML = `
+          <div class="w-full h-full flex flex-col items-center justify-center p-1">
+            <span class="text-lg sm:text-xl font-bold ${colorClass}">${card.rank}</span>
+            <span class="text-2xl sm:text-3xl ${colorClass}">${card.suit}</span>
+          </div>
+        `;
+      }
+      
+      return cardDiv;
+    }
+    
+    function renderHand(hand, elementId, showAll = true) {
+      const handEl = document.getElementById(elementId);
+      handEl.innerHTML = '';
+      
+      if (hand.length === 0) {
+        return;
+      }
+      
+      hand.forEach((card, index) => {
+        const cardEl = createCardElement(card, !showAll && index === 1);
+        handEl.appendChild(cardEl);
+      });
+    }
+    
+    function updateGameUI() {
+      document.getElementById('chipsDisplay').textContent = `${chips} 🪙`;
+      document.getElementById('bet1Amount').textContent = `${bet1} 🪙`;
+      
+      const dealerValue = dealerTurn ? getHandValue(dealerHand) : (dealerHand.length > 0 ? getCardValue(dealerHand[0]) : 0);
+      document.getElementById('dealerScore').textContent = dealerHand.length > 0 ? dealerValue : '-';
+      
+      const score1 = playerHand1.length > 0 ? getHandValue(playerHand1) : '-';
+      document.getElementById('score1').textContent = score1;
+      
+      document.getElementById('wins').textContent = wins;
+      document.getElementById('losses').textContent = losses;
+      document.getElementById('pushes').textContent = pushes;
+      document.getElementById('totalPlayed').textContent = totalPlayed;
+      
+      renderHand(playerHand1, 'hand1Cards');
+      renderHand(dealerHand, 'dealerHand', dealerTurn);
+    }
+    
+    function placeBet(amount) {
+      if (gameInProgress) return;
+      
+      if (chips >= amount) {
+        bet1 += amount;
+        addDealerChatMessage(`Aposta de ${amount} fichas. Total: ${bet1}`, 'player');
+        updateGameUI();
+      } else {
+        showMessage('Fichas insuficientes!', 'text-red-400');
+        addDealerChatMessage('Fichas insuficientes!', 'system');
+      }
+    }
+    
+    function clearBet() {
+      if (gameInProgress) return;
+      bet1 = 0;
+      addDealerChatMessage('Aposta removida!', 'system');
+      updateGameUI();
+    }
+    
+    async function dealCards() {
+      if (bet1 === 0) {
+        showMessage('Faça uma aposta!', 'text-yellow-400');
+        return;
+      }
+      
+      if (chips < bet1) {
+        showMessage('Fichas insuficientes!', 'text-red-400');
+        return;
+      }
+      
+      if (shoe.length < 30) {
+        shoe = createShoe();
+        showMessage('Embaralhando...', 'text-blue-400');
+        setTimeout(() => dealCards(), 1000);
+        return;
+      }
+      
+      chips -= bet1;
+      gameInProgress = true;
+      dealerTurn = false;
+      
+      playerHand1 = [];
+      dealerHand = [];
+      
+      playerHand1.push(shoe.pop());
+      dealerHand.push(shoe.pop());
+      playerHand1.push(shoe.pop());
+      dealerHand.push(shoe.pop());
+      
+      updateGameUI();
+      await saveUserProgress();
+      
+      const player1BJ = isBlackjack(playerHand1);
+      const dealerBJ = isBlackjack(dealerHand);
+      
+      if (player1BJ || dealerBJ) {
+        dealerTurn = true;
+        updateGameUI();
+        setTimeout(() => handleBlackjacks(player1BJ, dealerBJ), 500);
+        return;
+      }
+      
+      document.getElementById('bettingArea').classList.add('hidden');
+      startPlayingHand();
+    }
+    
+    async function handleBlackjacks(player1BJ, dealerBJ) {
+      if (player1BJ && dealerBJ) {
+        chips += bet1;
+        pushes++;
+        showMessage('Empate!', 'text-yellow-400');
+      } else if (player1BJ) {
+        const winnings = Math.floor(bet1 * (1 + BLACKJACK_PAYOUT));
+        chips += winnings;
+        wins++;
+        showMessage('BLACKJACK! 🎉', 'text-green-400');
+      } else if (dealerBJ) {
+        losses++;
+        showMessage('Dealer Blackjack!', 'text-red-400');
+      }
+      
+      totalPlayed++;
+      await endGame();
+    }
+    
+    function startPlayingHand() {
+      canDoubleDown = true;
+      document.getElementById('actionButtons').classList.remove('hidden');
+      showMessage('Sua vez!', 'text-green-400');
+    }
+    
+    async function hit() {
+      if (!gameInProgress || dealerTurn) return;
+      
+      const card = shoe.pop();
+      playerHand1.push(card);
+      
+      canDoubleDown = false;
+      document.getElementById('doubleBtn').classList.add('hidden');
+      
+      updateGameUI();
+      
+      const handValue = getHandValue(playerHand1);
+      
+      if (handValue > 21) {
+        setTimeout(async () => {
+          showMessage('Você estourou! 💥', 'text-red-400');
+          losses++;
+          totalPlayed++;
+          await endGame();
+        }, 500);
+      } else if (handValue === 21) {
+        setTimeout(() => stand(), 500);
+      }
+    }
+    
+    async function stand() {
+      if (!gameInProgress || dealerTurn) return;
+      
+      document.getElementById('actionButtons').classList.add('hidden');
+      dealerTurn = true;
+      updateGameUI();
+      
+      showMessage('Vez do dealer...', 'text-blue-400');
+      setTimeout(dealerPlay, 1000);
+    }
+    
+    async function doubleDown() {
+      if (!gameInProgress || !canDoubleDown || chips < bet1) {
+        if (chips < bet1) {
+          showMessage('Fichas insuficientes!', 'text-red-400');
+        }
+        return;
+      }
+      
+      chips -= bet1;
+      bet1 *= 2;
+      
+      const card = shoe.pop();
+      playerHand1.push(card);
+      
+      updateGameUI();
+      await saveUserProgress();
+      
+      const handValue = getHandValue(playerHand1);
+      
+      if (handValue > 21) {
+        setTimeout(async () => {
+          showMessage('Você estourou! 💥', 'text-red-400');
+          losses++;
+          totalPlayed++;
+          await endGame();
+        }, 500);
+      } else {
+        setTimeout(() => stand(), 500);
+      }
+    }
+    
+    async function dealerPlay() {
+      let dealerValue = getHandValue(dealerHand);
+      const isSoft = isSoftHand(dealerHand);
+      
+      const mustHit = dealerValue < DEALER_STANDS_ON || 
+                      (dealerValue === DEALER_STANDS_ON && isSoft && DEALER_HITS_SOFT_17);
+      
+      if (mustHit) {
+        const card = shoe.pop();
+        dealerHand.push(card);
+        updateGameUI();
+        
+        const newValue = getHandValue(dealerHand);
+        if (newValue > 21) {
+          setTimeout(() => determineWinners(), 500);
+        } else {
+          setTimeout(dealerPlay, 1000);
+        }
+      } else {
+        determineWinners();
+      }
+    }
+    
+    async function determineWinners() {
+      const dealerValue = getHandValue(dealerHand);
+      const hand1Value = getHandValue(playerHand1);
+      
+      if (hand1Value > 21) {
+        losses++;
+        showMessage('Você estourou!', 'text-red-400');
+      } else if (dealerValue > 21) {
+        chips += bet1 * 2;
+        wins++;
+        showMessage('Vitória! 🎉', 'text-green-400');
+      } else if (hand1Value > dealerValue) {
+        chips += bet1 * 2;
+        wins++;
+        showMessage('Vitória! 🎉', 'text-green-400');
+      } else if (hand1Value < dealerValue) {
+        losses++;
+        showMessage('Dealer venceu!', 'text-red-400');
+      } else {
+        chips += bet1;
+        pushes++;
+        showMessage('Empate!', 'text-yellow-400');
+      }
+      
+      totalPlayed++;
+      await endGame();
+    }
+    
+    async function endGame() {
+      gameInProgress = false;
+      updateGameUI();
+      await saveUserProgress();
+      
+      document.getElementById('actionButtons').classList.add('hidden');
+      document.getElementById('newRoundArea').classList.remove('hidden');
+      
+      if (chips === 0) {
+        showMessage('Sem fichas! Fale com o admin.', 'text-red-400');
+      }
+    }
+    
+    function newRound() {
+      bet1 = 0;
+      playerHand1 = [];
+      dealerHand = [];
+      canDoubleDown = false;
+      
+      document.getElementById('hand1Cards').innerHTML = '';
+      document.getElementById('dealerHand').innerHTML = '<p class="text-white/70 text-sm">Aguardando apostas...</p>';
+      document.getElementById('score1').textContent = '-';
+      document.getElementById('dealerScore').textContent = '-';
+      
+      document.getElementById('bettingArea').classList.remove('hidden');
+      document.getElementById('newRoundArea').classList.add('hidden');
+      document.getElementById('doubleBtn').classList.remove('hidden');
+      
+      showMessage('Faça sua aposta!', 'text-blue-400');
+      addDealerChatMessage('Nova rodada! 🎰', 'dealer');
+      updateGameUI();
+    }
+    
+    function showMessage(text, colorClass = 'text-yellow-300') {
+      const messageEl = document.getElementById('gameMessage');
+      messageEl.textContent = text;
+      messageEl.className = `text-base sm:text-lg font-bold ${colorClass}`;
+    }
+    
+    function addDealerChatMessage(message, type = 'dealer') {
+      const chatContainer = document.getElementById('dealerChat');
+      const messageDiv = document.createElement('div');
+      
+      const timestamp = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      
+      if (type === 'dealer') {
+        messageDiv.className = 'bg-blue-600/20 border-l-4 border-blue-500 rounded-lg p-2';
+        messageDiv.innerHTML = `
+          <p class="text-blue-300 text-xs font-bold mb-1">💬 Dealer • ${timestamp}</p>
+          <p class="text-white text-xs">${message}</p>
+        `;
+      } else if (type === 'player') {
+        messageDiv.className = 'bg-green-600/20 border-l-4 border-green-500 rounded-lg p-2';
+        messageDiv.innerHTML = `
+          <p class="text-green-300 text-xs font-bold mb-1">👤 Você • ${timestamp}</p>
+          <p class="text-white text-xs">${message}</p>
+        `;
+      } else if (type === 'system') {
+        messageDiv.className = 'bg-yellow-600/20 border-l-4 border-yellow-500 rounded-lg p-2';
+        messageDiv.innerHTML = `
+          <p class="text-yellow-300 text-xs font-bold mb-1">⚡ Sistema • ${timestamp}</p>
+          <p class="text-white text-xs">${message}</p>
+        `;
+      }
+      
+      chatContainer.appendChild(messageDiv);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+    
+    // Global Functions
+    window.openAdminLogin = openAdminLogin;
+    window.closeAdminLogin = closeAdminLogin;
+    window.openPlayerRegister = openPlayerRegister;
+    window.closePlayerRegister = closePlayerRegister;
+    window.playerRegister = playerRegister;
+    window.adminLogin = adminLogin;
+    window.adminLogout = adminLogout;
+    window.createAccount = createAccount;
+    window.addChipsToPlayer = addChipsToPlayer;
+    window.removeChipsFromPlayer = removeChipsFromPlayer;
+    window.setChipsForPlayer = setChipsForPlayer;
+    window.deletePlayer = deletePlayer;
+    window.openWhatsApp = openWhatsApp;
+    window.playerLogout = playerLogout;
+    window.toggleRanking = toggleRanking;
+    window.placeBet = placeBet;
+    window.clearBet = clearBet;
+    window.dealCards = dealCards;
+    window.hit = hit;
+    window.stand = stand;
+    window.doubleDown = doubleDown;
+    window.newRound = newRound;
+    
+    // Initialize
+    window.addEventListener('DOMContentLoaded', async () => {
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange,
+          mapToCapabilities,
+          mapToEditPanelValues
+        });
+        
+        await onConfigChange(window.elementSdk.config);
+      }
+      
+      if (window.dataSdk) {
+        const initResult = await window.dataSdk.init(dataHandler);
+        if (!initResult.isOk) {
+          console.error('Erro ao inicializar Data SDK');
+        }
+      }
+      
+      document.getElementById('loginBtn').addEventListener('click', playerLogin);
+      
+      document.getElementById('loginPassword').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') playerLogin();
+      });
+      
+      document.getElementById('adminPassword').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') adminLogin();
+      });
+    });
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b5e5e27953ec6c1',t:'MTc2NzA2NDQ3NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
