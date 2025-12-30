@@ -293,6 +293,21 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    
+    @keyframes notificationPulse {
+      0%, 100% { 
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7);
+      }
+      50% { 
+        transform: scale(1.02);
+        box-shadow: 0 0 20px 5px rgba(251, 191, 36, 0.3);
+      }
+    }
+    
+    .notification-card {
+      animation: notificationPulse 2s ease-in-out infinite;
+    }
   </style>
   <style>@view-transition { navigation: auto; }</style>
  </head>
@@ -362,6 +377,32 @@
       <p class="text-sm font-medium"></p>
      </div>
     </div>
+   </div><!-- Buy Chips Modal -->
+   <div id="buyChipsModal" class="hidden fixed inset-0 bg-black/90 modal-overlay flex items-center justify-center z-50 p-4">
+    <div class="bg-gradient-to-br from-green-900 to-green-800 rounded-2xl shadow-2xl p-6 max-w-md w-full border-3 border-yellow-500 slide-in">
+     <div class="text-center mb-4">
+      <div class="text-5xl mb-3">
+       💰
+      </div>
+      <h2 class="text-2xl font-bold text-yellow-300 mb-1">Comprar Fichas</h2>
+      <p class="text-green-200 text-sm">Recarregue sua carteira e continue jogando!</p>
+     </div>
+     <div class="bg-black/40 rounded-lg p-4 mb-4">
+      <div class="flex items-center justify-between mb-2"><span class="text-yellow-300 font-bold">💵 Valor:</span> <span class="text-white text-xl font-bold">R$ 10,00</span>
+      </div>
+      <div class="flex items-center justify-between"><span class="text-yellow-300 font-bold">🪙 Fichas:</span> <span class="text-white text-xl font-bold">100 fichas</span>
+      </div>
+     </div>
+     <div class="bg-yellow-500/20 border-l-4 border-yellow-500 rounded-lg p-3 mb-4">
+      <p class="text-yellow-200 text-sm"><strong>📧 Como funciona:</strong><br>
+        O administrador será notificado da sua solicitação e entrará em contato para combinar o pagamento!</p>
+     </div>
+     <div class="flex flex-col gap-2"><button id="confirmBuyBtn" onclick="confirmBuyChips()" class="w-full bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 text-gray-900 font-bold py-3 px-6 rounded-lg transition-all shadow-lg text-base"> ✅ Confirmar Solicitação </button> <button onclick="closeBuyChipsModal()" class="w-full bg-gray-700 hover:bg-gray-800 active:bg-gray-900 text-white font-bold py-3 px-6 rounded-lg transition-all shadow-lg text-base"> ✕ Cancelar </button>
+     </div>
+     <div id="buyChipsMessage" class="mt-3 text-center hidden">
+      <p class="text-sm font-medium"></p>
+     </div>
+    </div>
    </div><!-- Admin Panel Screen -->
    <div id="adminScreen" class="hidden w-full min-h-full p-4">
     <div class="max-w-6xl mx-auto"><!-- Admin Header -->
@@ -374,7 +415,16 @@
         </div>
        </div><button onclick="adminLogout()" class="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold py-2 px-4 rounded-lg transition-all shadow-lg text-sm"> 🚪 Sair </button>
       </div>
-     </header><!-- Create Account Form -->
+     </header><!-- Notifications Section -->
+     <div id="notificationsSection" class="hidden bg-gradient-to-br from-yellow-900 to-orange-900 rounded-2xl shadow-2xl p-4 mb-4 border-3 border-yellow-500">
+      <div class="flex items-center justify-between mb-4">
+       <h2 class="text-xl font-bold text-yellow-300 flex items-center gap-2"><span>🔔</span> Solicitações de Compra</h2>
+       <div class="bg-red-600 text-white font-bold px-3 py-1 rounded-full text-sm"><span id="notificationCount">0</span> pendente(s)
+       </div>
+      </div>
+      <div id="notificationsList" class="space-y-3 max-h-[400px] overflow-y-auto scrollbar-hide">
+      </div>
+     </div><!-- Create Account Form -->
      <div class="bg-white/95 backdrop-blur rounded-2xl shadow-2xl p-4 mb-4">
       <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><span>✨</span> Criar Nova Conta de Jogador</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
@@ -427,7 +477,7 @@
       <div class="text-center mb-2">
        <h1 id="gameTitle" class="text-lg sm:text-xl font-bold text-yellow-400">♠️♥️ Blackjack 21 ♦️♣️</h1>
       </div>
-      <div class="flex flex-wrap gap-2 justify-center"><button id="rankingBtn" onclick="toggleRanking()" class="bg-yellow-600 hover:bg-yellow-700 active:bg-yellow-800 text-white font-bold py-2 px-4 rounded-lg transition-all shadow-lg text-sm"> 🏆 Ranking </button> <button onclick="playerLogout()" class="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold py-2 px-4 rounded-lg transition-all shadow-lg text-sm"> 🚪 Sair </button>
+      <div class="flex flex-wrap gap-2 justify-center"><button id="rankingBtn" onclick="toggleRanking()" class="bg-yellow-600 hover:bg-yellow-700 active:bg-yellow-800 text-white font-bold py-2 px-4 rounded-lg transition-all shadow-lg text-sm"> 🏆 Ranking </button> <button onclick="openBuyChipsModal()" class="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-2 px-4 rounded-lg transition-all shadow-lg text-sm"> 💰 Comprar Fichas </button> <button onclick="playerLogout()" class="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold py-2 px-4 rounded-lg transition-all shadow-lg text-sm"> 🚪 Sair </button>
       </div>
      </div>
     </header>
@@ -538,7 +588,7 @@
   </div>
   <script>
     const defaultConfig = {
-      game_title: "♠���♥️ Blackjack 21 ♦️♣️",
+      game_title: "♠️♥️ Blackjack 21 ♦️♣️",
       welcome_text: "Bem-vindo ao Cassino!"
     };
     
@@ -578,8 +628,9 @@
         
         if (isAdmin) {
           renderAdminPlayersList();
+          renderNotifications();
         } else if (currentUser) {
-          const updatedUser = allUsers.find(u => u.id === currentUser.id);
+          const updatedUser = allUsers.find(u => u.id === currentUser.id && !u.is_notification);
           if (updatedUser) {
             currentUser = updatedUser;
             chips = currentUser.chips;
@@ -651,6 +702,72 @@
       document.getElementById('registerMessage').classList.add('hidden');
     }
     
+    // Buy Chips Functions
+    function openBuyChipsModal() {
+      if (!currentUser) return;
+      document.getElementById('buyChipsModal').classList.remove('hidden');
+    }
+    
+    function closeBuyChipsModal() {
+      document.getElementById('buyChipsModal').classList.add('hidden');
+      document.getElementById('buyChipsMessage').classList.add('hidden');
+    }
+    
+    async function confirmBuyChips() {
+      if (!currentUser) return;
+      
+      const confirmBtn = document.getElementById('confirmBuyBtn');
+      confirmBtn.disabled = true;
+      confirmBtn.innerHTML = '<div class="loading-spinner mx-auto"></div>';
+      
+      // Criar notificação para o admin
+      const notification = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        is_notification: true,
+        notification_type: 'buy_chips',
+        player_id: currentUser.id,
+        player_username: currentUser.username,
+        player_email: currentUser.email || '',
+        player_whatsapp: currentUser.whatsapp || '',
+        chip_amount: 100,
+        price: 10.00,
+        created_at: new Date().toISOString(),
+        username: '',
+        password: '',
+        email: '',
+        whatsapp: '',
+        is_admin: false,
+        chips: 0,
+        total_wins: 0,
+        total_losses: 0,
+        total_pushes: 0,
+        total_played: 0
+      };
+      
+      const result = await window.dataSdk.create(notification);
+      
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = '✅ Confirmar Solicitação';
+      
+      if (result.isOk) {
+        showBuyChipsMessage('✅ Solicitação enviada! O admin será notificado.', 'text-green-300');
+        addDealerChatMessage(`Solicitação de compra enviada ao administrador! 💰`, 'system');
+        
+        setTimeout(() => {
+          closeBuyChipsModal();
+        }, 2000);
+      } else {
+        showBuyChipsMessage('❌ Erro ao enviar solicitação. Tente novamente.', 'text-red-300');
+      }
+    }
+    
+    function showBuyChipsMessage(message, colorClass) {
+      const messageEl = document.getElementById('buyChipsMessage');
+      messageEl.querySelector('p').textContent = message;
+      messageEl.querySelector('p').className = `text-sm font-medium ${colorClass}`;
+      messageEl.classList.remove('hidden');
+    }
+    
     async function playerRegister() {
       const username = document.getElementById('regUsername').value.trim();
       const password = document.getElementById('regPassword').value.trim();
@@ -672,7 +789,7 @@
         return;
       }
       
-      const existingUser = allUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
+      const existingUser = allUsers.find(u => !u.is_notification && u.username.toLowerCase() === username.toLowerCase());
       if (existingUser) {
         showRegisterMessage('Usuário já existe! Escolha outro.', 'text-red-600');
         return;
@@ -694,7 +811,15 @@
         total_losses: 0,
         total_pushes: 0,
         total_played: 0,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        is_notification: false,
+        notification_type: '',
+        player_id: '',
+        player_username: '',
+        player_email: '',
+        player_whatsapp: '',
+        chip_amount: 0,
+        price: 0
       };
       
       const result = await window.dataSdk.create(newUser);
@@ -759,6 +884,7 @@
       document.getElementById('authScreen').classList.add('hidden');
       document.getElementById('adminScreen').classList.remove('hidden');
       renderAdminPlayersList();
+      renderNotifications();
     }
     
     function adminLogout() {
@@ -771,6 +897,124 @@
       document.getElementById('newEmail').value = '';
       document.getElementById('newWhatsapp').value = '';
       document.getElementById('newChips').value = '100';
+    }
+    
+    // Render Notifications
+    function renderNotifications() {
+      const notifications = allUsers.filter(u => u.is_notification === true && u.notification_type === 'buy_chips');
+      
+      const section = document.getElementById('notificationsSection');
+      const container = document.getElementById('notificationsList');
+      const countEl = document.getElementById('notificationCount');
+      
+      countEl.textContent = notifications.length;
+      
+      if (notifications.length === 0) {
+        section.classList.add('hidden');
+        return;
+      }
+      
+      section.classList.remove('hidden');
+      container.innerHTML = '';
+      
+      notifications.forEach(notif => {
+        const card = document.createElement('div');
+        card.className = 'notification-card bg-gradient-to-br from-yellow-100 to-orange-100 rounded-lg p-4 border-3 border-yellow-500 shadow-lg';
+        
+        const createdDate = new Date(notif.created_at).toLocaleString('pt-BR');
+        
+        card.innerHTML = `
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <h3 class="text-lg font-bold text-gray-800 mb-1">💰 Compra de Fichas</h3>
+              <p class="text-xs text-gray-600">${createdDate}</p>
+            </div>
+            <span class="bg-red-600 text-white font-bold px-3 py-1 rounded-full text-xs">NOVO</span>
+          </div>
+          
+          <div class="bg-white/70 rounded-lg p-3 mb-3">
+            <div class="grid grid-cols-2 gap-2 text-sm">
+              <div>
+                <p class="text-gray-600">👤 Jogador:</p>
+                <p class="font-bold text-gray-800">${notif.player_username}</p>
+              </div>
+              <div>
+                <p class="text-gray-600">💵 Valor:</p>
+                <p class="font-bold text-green-600">R$ ${notif.price.toFixed(2)}</p>
+              </div>
+              <div>
+                <p class="text-gray-600">🪙 Fichas:</p>
+                <p class="font-bold text-yellow-600">${notif.chip_amount}</p>
+              </div>
+              <div>
+                <p class="text-gray-600">📱 WhatsApp:</p>
+                <p class="font-bold text-blue-600">${notif.player_whatsapp || 'N/A'}</p>
+              </div>
+            </div>
+            ${notif.player_email ? `
+              <div class="mt-2">
+                <p class="text-gray-600 text-sm">📧 E-mail:</p>
+                <p class="font-bold text-gray-800 text-sm">${notif.player_email}</p>
+              </div>
+            ` : ''}
+          </div>
+          
+          <div class="flex gap-2">
+            ${notif.player_whatsapp ? `
+              <button onclick="contactPlayerWhatsApp('${notif.player_whatsapp}', '${notif.player_username}', ${notif.chip_amount}, ${notif.price})" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-all">
+                📱 WhatsApp
+              </button>
+            ` : ''}
+            <button onclick="deleteNotification('${notif.__backendId}')" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-all">
+              ✅ Concluir
+            </button>
+          </div>
+        `;
+        
+        container.appendChild(card);
+      });
+    }
+    
+    function contactPlayerWhatsApp(phone, username, amount, price) {
+      const message = encodeURIComponent(`Olá ${username}! Recebemos sua solicitação de compra de ${amount} fichas por R$ ${price.toFixed(2)}. Vamos combinar o pagamento?`);
+      window.open(`https://wa.me/${phone}?text=${message}`, '_blank', 'noopener,noreferrer');
+    }
+    
+    async function deleteNotification(backendId) {
+      const notification = allUsers.find(u => u.__backendId === backendId);
+      if (!notification) return;
+      
+      const confirmDiv = document.createElement('div');
+      confirmDiv.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4';
+      confirmDiv.innerHTML = `
+        <div class="bg-white rounded-xl p-6 max-w-sm">
+          <h3 class="text-lg font-bold text-gray-800 mb-2">Confirmar Exclusão</h3>
+          <p class="text-gray-600 mb-4">Tem certeza que deseja concluir esta solicitação de <strong>${notification.player_username}</strong>?</p>
+          <div class="flex gap-2">
+            <button id="confirmDeleteNotif" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">
+              ✅ Sim, Concluir
+            </button>
+            <button id="cancelDeleteNotif" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg">
+              ✕ Cancelar
+            </button>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(confirmDiv);
+      
+      document.getElementById('confirmDeleteNotif').onclick = async () => {
+        const result = await window.dataSdk.delete(notification);
+        document.body.removeChild(confirmDiv);
+        
+        if (!result.isOk) {
+          alert('Erro ao excluir notificação!');
+        }
+      };
+      
+      document.getElementById('cancelDeleteNotif').onclick = () => {
+        document.body.removeChild(confirmDiv);
+      };
     }
     
     // Create Account Function
@@ -791,7 +1035,7 @@
         return;
       }
       
-      const existingUser = allUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
+      const existingUser = allUsers.find(u => !u.is_notification && u.username.toLowerCase() === username.toLowerCase());
       if (existingUser) {
         showCreateMessage('Usuário já existe!', 'text-red-600');
         return;
@@ -813,7 +1057,15 @@
         total_losses: 0,
         total_pushes: 0,
         total_played: 0,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        is_notification: false,
+        notification_type: '',
+        player_id: '',
+        player_username: '',
+        player_email: '',
+        player_whatsapp: '',
+        chip_amount: 0,
+        price: 0
       };
       
       const result = await window.dataSdk.create(newUser);
@@ -850,7 +1102,7 @@
       const container = document.getElementById('playersList');
       const countEl = document.getElementById('playerCount');
       
-      const players = allUsers.filter(u => !u.is_admin);
+      const players = allUsers.filter(u => !u.is_admin && !u.is_notification);
       countEl.textContent = players.length;
       
       if (players.length === 0) {
@@ -936,7 +1188,7 @@
               </button>
             ` : ''}
             <button onclick="deletePlayer('${user.__backendId}')" class="flex-1 bg-gray-600 hover:bg-gray-700 active:bg-gray-800 text-white font-bold py-2 rounded-lg text-sm transition-all">
-              ��️ Deletar
+              🗑️ Deletar
             </button>
           </div>
         `;
@@ -954,7 +1206,11 @@
       const amount = parseInt(input.value);
       
       if (!amount || amount <= 0) {
-        alert('Digite um valor válido!');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'fixed top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+        msgDiv.textContent = 'Digite um valor válido!';
+        document.body.appendChild(msgDiv);
+        setTimeout(() => document.body.removeChild(msgDiv), 2000);
         return;
       }
       
@@ -963,8 +1219,6 @@
       
       if (result.isOk) {
         input.value = '';
-      } else {
-        alert('Erro ao adicionar fichas!');
       }
     }
     
@@ -976,7 +1230,11 @@
       const amount = parseInt(input.value);
       
       if (!amount || amount <= 0) {
-        alert('Digite um valor válido!');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'fixed top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+        msgDiv.textContent = 'Digite um valor válido!';
+        document.body.appendChild(msgDiv);
+        setTimeout(() => document.body.removeChild(msgDiv), 2000);
         return;
       }
       
@@ -985,8 +1243,6 @@
       
       if (result.isOk) {
         input.value = '';
-      } else {
-        alert('Erro ao remover fichas!');
       }
     }
     
@@ -998,7 +1254,11 @@
       const amount = parseInt(input.value);
       
       if (amount === undefined || amount < 0 || isNaN(amount)) {
-        alert('Digite um valor válido!');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'fixed top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+        msgDiv.textContent = 'Digite um valor válido!';
+        document.body.appendChild(msgDiv);
+        setTimeout(() => document.body.removeChild(msgDiv), 2000);
         return;
       }
       
@@ -1007,8 +1267,6 @@
       
       if (result.isOk) {
         input.value = '';
-      } else {
-        alert('Erro ao definir fichas!');
       }
     }
     
@@ -1040,7 +1298,11 @@
         document.body.removeChild(confirmDiv);
         
         if (!result.isOk) {
-          alert('Erro ao deletar jogador!');
+          const msgDiv = document.createElement('div');
+          msgDiv.className = 'fixed top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+          msgDiv.textContent = 'Erro ao deletar jogador!';
+          document.body.appendChild(msgDiv);
+          setTimeout(() => document.body.removeChild(msgDiv), 2000);
         }
       };
       
@@ -1065,6 +1327,7 @@
       }
       
       const user = allUsers.find(u => 
+        !u.is_notification &&
         u.username.toLowerCase() === username.toLowerCase() && 
         u.password === password &&
         !u.is_admin
@@ -1159,7 +1422,7 @@
     function renderRankingList() {
       const container = document.getElementById('rankingList');
       
-      const players = allUsers.filter(u => !u.is_admin);
+      const players = allUsers.filter(u => !u.is_admin && !u.is_notification);
       
       if (players.length === 0) {
         container.innerHTML = '<p class="text-gray-500 text-center py-4 text-sm">Nenhum jogador</p>';
@@ -1640,8 +1903,13 @@
     window.setChipsForPlayer = setChipsForPlayer;
     window.deletePlayer = deletePlayer;
     window.openWhatsApp = openWhatsApp;
+    window.contactPlayerWhatsApp = contactPlayerWhatsApp;
+    window.deleteNotification = deleteNotification;
     window.playerLogout = playerLogout;
     window.toggleRanking = toggleRanking;
+    window.openBuyChipsModal = openBuyChipsModal;
+    window.closeBuyChipsModal = closeBuyChipsModal;
+    window.confirmBuyChips = confirmBuyChips;
     window.placeBet = placeBet;
     window.clearBet = clearBet;
     window.dealCards = dealCards;
@@ -1681,5 +1949,5 @@
       });
     });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b5e5e27953ec6c1',t:'MTc2NzA2NDQ3NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b5e8267b6a43e73',t:'MTc2NzA2NTk1OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
